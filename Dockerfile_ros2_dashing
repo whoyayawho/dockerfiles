@@ -1,0 +1,35 @@
+FROM ubuntu:18.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt update && apt install -y apt-utils gedit git locales
+
+# Install ROS2 dashing
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+RUN export LANG=en_US.UTF-8
+
+RUN apt update && apt install -y curl gnupg2 lsb-release
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+RUN apt update && apt install -y ros-dashing-desktop python3-pip python3-colcon-common-extensions ros-dashing-ros2bag ros-dashing-rosbag2-converter-default-plugins ros-dashing-rosbag2-storage-default-plugins
+RUN pip3 install -U argcomplete
+
+
+RUN mkdir -p /root/ros2_ws/src
+
+RUN echo "" >> /root/.bashrc
+RUN echo "### ros2" >> /root/.bashrc
+RUN echo "source /opt/ros/dashing/setup.bash" >> /root/.bashrc
+RUN echo "source ~/ros2_ws/install/setup.bash" >> /root/.bashrc
+RUN echo "" >> /root/.bashrc
+RUN echo "alias cs='cd ~/ros2_ws/src'" >> /root/.bashrc
+RUN echo "alias cw='cd ~/ros2_ws'" >> /root/.bashrc
+RUN echo "alias cm='cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON && source ~/.bashrc'" >> /root/.bashrc
+RUN echo "" >> /root/.bashrc
+RUN echo "export RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED=1" >> /root/.bashrc
+
+
+CMD ["/bin/bash"]
