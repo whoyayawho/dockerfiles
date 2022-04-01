@@ -1,5 +1,7 @@
 FROM ubuntu:18.04
 
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 
