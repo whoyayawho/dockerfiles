@@ -2,7 +2,7 @@
 
 USER_NAME=smkang
 CONTAINER_NAME=ros2_dashing_cartographer
-IMAGE_NAME=soslab_msd2:ros2_dashing
+IMAGE_NAME=smkang0521/soslab_msd2:ros2_dashing
 
 docker run --name=${CONTAINER_NAME} --ipc=host --net=host --privileged -it \
 --gpus all \
