@@ -1,0 +1,35 @@
+FROM ubuntu:20.04
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt update && apt install -y apt-utils gedit git locales lsb-release gnupg2 curl
+
+# Install ROS Melodic
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+RUN apt update && apt install -y ros-noetic-desktop-full python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+
+RUN rosdep init
+RUN rosdep update
+
+RUN mkdir -p /root/ros_ws/src
+
+RUN echo "" >> /root/.bashrc
+RUN echo "### ros" >> /root/.bashrc
+RUN echo "source /opt/ros/noetic/setup.bash" >> /root/.bashrc
+RUN echo "source ~/ros_ws/install/setup.bash" >> /root/.bashrc
+RUN echo "" >> /root/.bashrc
+RUN echo "alias cw='cd ~/ros_ws'" >> /root/.bashrc
+RUN echo "alias cs='cd ~/ros_ws/src'" >> /root/.bashrc
+RUN echo "alias cm='cd ~/ros_ws && catkin_make && source ~/.bashrc'" >> /root/.bashrc
+RUN echo "" >> /root/.bashrc
+RUN echo "export ROS_HOSTNAME=localhost" >> /root/.bashrc
+RUN echo "export ROS_MASTER_URI=http://localhost:11311" >> /root/.bashrc
+RUN echo "" >> /root/.bashrc
+RUN echo "export RCUTILS_CONSOLE_STDOUT_LINE_BUFFERED=1" >> /root/.bashrc
+
+
+CMD ["/bin/bash"]
