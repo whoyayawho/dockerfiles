@@ -20,7 +20,7 @@ RUN mkdir -p /root/ros_ws/src
 RUN echo "" >> /root/.bashrc
 RUN echo "### ros" >> /root/.bashrc
 RUN echo "source /opt/ros/melodic/setup.bash" >> /root/.bashrc
-RUN echo "source ~/ros_ws/install/setup.bash" >> /root/.bashrc
+RUN echo "source ~/ros_ws/devel/setup.bash" >> /root/.bashrc
 RUN echo "" >> /root/.bashrc
 RUN echo "alias cw='cd ~/ros_ws'" >> /root/.bashrc
 RUN echo "alias cs='cd ~/ros_ws/src'" >> /root/.bashrc
