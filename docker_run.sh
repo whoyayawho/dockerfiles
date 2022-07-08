@@ -14,5 +14,4 @@ docker run --name=${CONTAINER_NAME} --ipc=host --net=host --privileged -it \
 -v ${XDG_RUNTIME_DIR}/pulse/native:${XDG_RUNTIME_DIR}/pulse/native:rw \
 -v /home/${USER_NAME}/.config/pulse/cookie:/root/.config/pulse/cookie \
 -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
--v /dev:/dev:rw \
 ${IMAGE_NAME} /bin/bash
