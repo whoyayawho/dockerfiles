@@ -5,7 +5,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
 
-RUN apt update && apt install -y apt-utils gedit git locales lsb-release gnupg2 curl tmux
+RUN apt update && apt install -y apt-utils gedit git locales lsb-release gnupg2 curl tmux vim
 
 # Install ROS Melodic
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
