@@ -1,7 +1,7 @@
 #!/bin/bash
 
-CONTAINER_NAME=ros2_dashing
-IMAGE_NAME=smkang0521/ros:dashing
+CONTAINER_NAME=ros2_humble
+IMAGE_NAME=smkang0521/ros:humble
 
 docker run --name=${CONTAINER_NAME} --ipc=host --net=host --privileged -it \
 --gpus all \
