@@ -18,7 +18,7 @@ RUN export LANG=en_US.UTF-8
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
 RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-RUN apt update && apt upgrade -y && apt install -y ros-humble-desktop ros-dev-tools python3-pip python3-colcon-common-extensions ros-humble-ros2bag ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap ros-humble-pcl-ros ros-humble-image-common ros-humble-camera-info-manager ros-humble-cv-bridge ros-humble-image-transport ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs ros-humble-geometry-msgs ros-humble-diagnostic-msgs
+RUN apt update && apt upgrade -y && apt install -y ros-humble-desktop ros-dev-tools python3-pip python3-colcon-common-extensions ros-humble-ros2bag ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap ros-humble-pcl-ros ros-humble-image-common ros-humble-camera-info-manager ros-humble-cv-bridge ros-humble-image-transport ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs ros-humble-geometry-msgs ros-humble-diagnostic-msgs ros-humble-image-transport ros-humble-compressed-image-transport
 RUN pip3 install -U argcomplete
 
 RUN mkdir -p /root/ros2_ws/src
