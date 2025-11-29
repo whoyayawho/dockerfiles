@@ -4,62 +4,78 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 ARG DEBIAN_FRONTEND=noninteractive
 ENV TZ=Asia/Seoul
+ENV LANG=en_US.UTF-8
 
-RUN apt update && apt upgrade -y
-RUN apt install -y software-properties-common
-RUN add-apt-repository universe
-RUN apt install -y apt-utils gedit openssh-client git locales lsb-release gnupg2 curl jq tmux vim gnupg2 lsb-release zip iputils-ping net-tools nlohmann-json3-dev
+# 기본 패키지 설치
+RUN apt update && apt upgrade -y \
+    && apt install -y software-properties-common \
+    && add-apt-repository universe \
+    && apt install -y \
+    apt-utils gedit openssh-client git locales lsb-release \
+    gnupg2 curl jq tmux vim zip iputils-ping net-tools \
+    nlohmann-json3-dev \
+    && locale-gen en_US en_US.UTF-8 \
+    && update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install ROS2 humble
-RUN locale-gen en_US en_US.UTF-8
-RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
-RUN export LANG=en_US.UTF-8
+# ROS2 Humble 설치
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null \
+    && apt update && apt install -y \
+    ros-humble-desktop ros-dev-tools python3-pip python3-colcon-common-extensions \
+    ros-humble-ros2bag ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap \
+    ros-humble-pcl-ros ros-humble-image-common ros-humble-camera-info-manager \
+    ros-humble-cv-bridge ros-humble-image-transport ros-humble-compressed-image-transport \
+    ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs \
+    ros-humble-geometry-msgs ros-humble-diagnostic-msgs \
+    && pip3 install -U argcomplete \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
-
-RUN apt update && apt upgrade -y && apt install -y ros-humble-desktop ros-dev-tools python3-pip python3-colcon-common-extensions ros-humble-ros2bag ros-humble-rosbag2-storage-default-plugins ros-humble-rosbag2-storage-mcap ros-humble-pcl-ros ros-humble-image-common ros-humble-camera-info-manager ros-humble-cv-bridge ros-humble-image-transport ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs ros-humble-geometry-msgs ros-humble-diagnostic-msgs ros-humble-image-transport ros-humble-compressed-image-transport
-RUN pip3 install -U argcomplete
-
+# Workspace 설정
 RUN mkdir -p /root/ros2_ws/src
 
-RUN echo "" >> /root/.bashrc
-RUN echo "### ros2" >> /root/.bashrc
-RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
-RUN echo "source ~/ros2_ws/install/setup.bash" >> /root/.bashrc
-RUN echo "" >> /root/.bashrc
-RUN echo "alias cs='cd ~/ros2_ws/src'" >> /root/.bashrc
-RUN echo "alias cw='cd ~/ros2_ws'" >> /root/.bashrc
-RUN echo "alias cm='cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON && source ~/.bashrc'" >> /root/.bashrc
-RUN echo "" >> /root/.bashrc
+# .bashrc 설정
+RUN cat <<'EOF' >> /root/.bashrc
 
-COPY pylon_8.1.0-deb0_amd64.deb /root/pylon_8.1.0-deb0_amd64.deb
-COPY codemeter_8.20.6558.501_amd64.deb /root/codemeter_8.20.6558.501_amd64.deb
-COPY pylon-supplementary-package-for-blaze-1.7.2.f00d43816_amd64.deb /root/pylon-supplementary-package-for-blaze-1.7.2.f00d43816_amd64.deb 
-RUN apt install -y /root/pylon_8.1.0-deb0_amd64.deb /root/codemeter_8.20.6558.501_amd64.deb /root/pylon-supplementary-package-for-blaze-1.7.2.f00d43816_amd64.deb
+### ros2
+source /opt/ros/humble/setup.bash
+source ~/ros2_ws/install/setup.bash
 
+alias cs='cd ~/ros2_ws/src'
+alias cw='cd ~/ros2_ws'
+alias cm='cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON && source ~/.bashrc'
+
+EOF
+
+# ROS2 패키지 복사 및 빌드
 COPY iahrs_ros2-main /root/ros2_ws/src/iahrs_ros2-main
 COPY merge_image_pointcloud-main /root/ros2_ws/src/merge_image_pointcloud-main
 COPY ml_ros2-main /root/ros2_ws/src/ml_ros2-main
 COPY pylon_ros2-main /root/ros2_ws/src/pylon_ros2-main
 
-RUN apt update && apt upgrade -y
-RUN source /opt/ros/humble/setup.bash && cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON
+RUN source /opt/ros/humble/setup.bash \
+    && cd ~/ros2_ws \
+    && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON
 
-RUN echo "#!/bin/bash" >> /root/run_imu.sh
-RUN echo "ros2 launch iahrs_ros2 iahrs.launch.py" >> /root/run_imu.sh
-RUN chmod +x /root/run_imu.sh
+# 실행 스크립트 생성
+RUN cat <<'EOF' > /root/soslab_run_all.sh
+#!/bin/bash
 
-RUN echo "#!/bin/bash" >> /root/run_merge.sh
-RUN echo "ros2 launch merge_image_pointcloud merge_image_pointcloud.launch.py" >> /root/run_merge.sh
-RUN chmod +x /root/run_merge.sh
+source /opt/ros/humble/setup.bash;
+source /root/ros2_ws/install/setup.bash;
 
-RUN echo "#!/bin/bash" >> /root/run_lidar.sh
-RUN echo "ros2 launch ml_ros2 mlx_launch.py" >> /root/run_lidar.sh
-RUN chmod +x /root/run_lidar.sh
+tmux new-session -d -s soslab;
+tmux new-window -t soslab:1;
+tmux new-window -t soslab:2;
+tmux new-window -t soslab:3;
 
-RUN echo "#!/bin/bash" >> /root/run_camera.sh
-RUN echo "ros2 launch pylon_ros2_camera_wrapper pylon_ros2_camera.launch.py" >> /root/run_camera.sh
-RUN chmod +x /root/run_camera.sh
+tmux send -t soslab:0 "cd /root/ros2_ws/src/ml_ros2-main/launch; ros2 launch ./mlx_launch.py" C-m
+tmux send -t soslab:1 "cd /root/ros2_ws/src/pylon_ros2-main/pylon_ros2_camera_wrapper/launch; ros2 launch ./pylon_ros2_camera.launch.py" C-m
+tmux send -t soslab:2 "cd /root/ros2_ws/src/iahrs_ros2-main/launch; ros2 launch ./iahrs.launch.py" C-m
+tmux send -t soslab:3 "cd /root/ros2_ws/src/merge_image_pointcloud-main/launch; ros2 launch ./merge_image_pointcloud.launch.py" C-m
+
+exit 0
+EOF
+RUN chmod +x /root/soslab_run_all.sh
 
 CMD ["/bin/bash"]

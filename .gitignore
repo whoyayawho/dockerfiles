@@ -4,6 +4,7 @@ github_token.txt
 *.deb
 *.zip
 *.tar.gz
+*.json
 
 iahrs_ros2-main
 merge_image_pointcloud-main
