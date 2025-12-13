@@ -28,11 +28,27 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o 
     ros-humble-cv-bridge ros-humble-image-transport ros-humble-compressed-image-transport \
     ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs \
     ros-humble-geometry-msgs ros-humble-diagnostic-msgs \
+    ros-humble-rmw-cyclonedds-cpp \
     && pip3 install -U argcomplete \
     && rm -rf /var/lib/apt/lists/*
 
 # Workspace 설정
 RUN mkdir -p /root/ros2_ws/src
+
+# Cyclone DDS 설정
+RUN cat <<'EOF' > /root/cyclonedds.xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain>
+        <General>
+            <Interfaces>
+                <NetworkInterface address="192.168.2.20" />
+            </Interfaces>
+            <AllowMulticast>true</AllowMulticast>
+        </General>
+    </Domain>
+</CycloneDDS>
+EOF
 
 # .bashrc 설정
 RUN cat <<'EOF' >> /root/.bashrc
@@ -44,6 +60,10 @@ source ~/ros2_ws/install/setup.bash
 alias cs='cd ~/ros2_ws/src'
 alias cw='cd ~/ros2_ws'
 alias cm='cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON && source ~/.bashrc'
+
+### Cyclone DDS
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI=file:///root/cyclonedds.xml
 
 EOF
 
