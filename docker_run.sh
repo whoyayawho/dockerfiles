@@ -4,12 +4,20 @@
 CONTAINER_NAME=ros2_humble
 IMAGE_NAME=smkang0521/ros:humble
 USE_NVIDIA_GPU=true
+USE_JETSON=true
 
 # GPU 옵션 설정
 if [ "$USE_NVIDIA_GPU" = "true" ]; then
-    GPU_OPTIONS="--gpus all \
+    if [ "$USE_JETSON" = "true" ]; then
+        # Jetson: --gpus all 제거, 환경변수만 사용
+        GPU_OPTIONS="-e NVIDIA_VISIBLE_DEVICES=all \
+-e NVIDIA_DRIVER_CAPABILITIES=all"
+    else
+        # 일반 NVIDIA GPU: --gpus all 포함
+        GPU_OPTIONS="--gpus all \
 -e NVIDIA_VISIBLE_DEVICES=all \
 -e NVIDIA_DRIVER_CAPABILITIES=all"
+    fi
 else
     GPU_OPTIONS=""
 fi
