@@ -4,7 +4,7 @@
 CONTAINER_NAME=ros2_humble
 IMAGE_NAME=smkang0521/ros:humble
 USE_NVIDIA_GPU=true
-USE_JETSON=true
+USE_JETSON=false
 
 # GPU 옵션 설정
 if [ "$USE_NVIDIA_GPU" = "true" ]; then
