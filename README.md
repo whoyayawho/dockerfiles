@@ -8,6 +8,7 @@ ROS(Robot Operating System) 및 ROS2 개발을 위한 Docker 이미지 모음입
 
 - [사용 가능한 이미지](#사용-가능한-이미지)
 - [빌드 방법](#빌드-방법)
+- [멀티 플랫폼 빌드](#멀티-플랫폼-빌드)
 - [DockerHub 업로드](#dockerhub-업로드)
 - [컨테이너 실행](#컨테이너-실행)
 - [SPADI 시스템 전용 안내](#spadi-시스템-전용-안내)
@@ -26,13 +27,14 @@ ROS(Robot Operating System) 및 ROS2 개발을 위한 Docker 이미지 모음입
 
 ### ROS 2
 
-| Dockerfile                     | Ubuntu | ROS 버전       | DockerHub 태그                | 설명                   |
-| ------------------------------ | ------ | -------------- | ----------------------------- | ---------------------- |
-| `Dockerfile_ros2_dashing`      | 18.04  | Dashing        | `smkang0521/ros:dashing`      | ROS2 Dashing Desktop   |
-| `Dockerfile_ros2_foxy`         | 20.04  | Foxy           | `smkang0521/ros:foxy`         | ROS2 Foxy Desktop      |
-| `Dockerfile_ros2_humble`       | 22.04  | Humble         | `smkang0521/ros:humble`       | ROS2 Humble Desktop    |
-| `Dockerfile_ros2_humble_spadi` | 22.04  | Humble + SPADI | `smkang0521/ros:humble_spadi` | SPADI 로봇 시스템 전용 |
-| `Dockerfile_ros2_jazzy`        | 24.04  | Jazzy          | `smkang0521/ros:jazzy`        | ROS2 Jazzy Desktop     |
+| Dockerfile                       | Ubuntu | ROS 버전         | DockerHub 태그                  | 설명                           |
+| -------------------------------- | ------ | ---------------- | ------------------------------- | ------------------------------ |
+| `Dockerfile_ros2_dashing`        | 18.04  | Dashing          | `smkang0521/ros:dashing`        | ROS2 Dashing Desktop           |
+| `Dockerfile_ros2_foxy`           | 20.04  | Foxy             | `smkang0521/ros:foxy`           | ROS2 Foxy Desktop              |
+| `Dockerfile_ros2_humble`         | 22.04  | Humble           | `smkang0521/ros:humble`         | ROS2 Humble Desktop            |
+| `Dockerfile_ros2_humble_spadi`   | 22.04  | Humble + SPADI   | `smkang0521/ros:humble_spadi`   | SPADI 로봇 시스템 전용         |
+| `Dockerfile_ros2_jazzy`          | 24.04  | Jazzy            | `smkang0521/ros:jazzy`          | ROS2 Jazzy Desktop             |
+| `Dockerfile_ros2_jazzy_tensorrt` | 24.04  | Jazzy + TensorRT | `smkang0521/ros:jazzy_tensorrt` | ROS2 Jazzy + TensorRT (GPU/AI) |
 
 ---
 
@@ -63,6 +65,9 @@ docker build --network=host --no-cache -t smkang0521/ros:humble_spadi -f Dockerf
 
 # ROS2 Jazzy
 docker build --network=host --no-cache -t smkang0521/ros:jazzy -f Dockerfile_ros2_jazzy .
+
+# ROS2 Jazzy TensorRT
+docker build --network=host --no-cache -t smkang0521/ros:jazzy_tensorrt -f Dockerfile_ros2_jazzy_tensorrt .
 ```
 
 ### 빌드 옵션 설명
@@ -71,6 +76,40 @@ docker build --network=host --no-cache -t smkang0521/ros:jazzy -f Dockerfile_ros
 - `--no-cache`: 캐시 없이 빌드
 - `-t`: 이미지 태그 지정
 - `-f`: 사용할 Dockerfile 지정
+
+---
+
+## 멀티 플랫폼 빌드
+
+하나의 Dockerfile로 `amd64`(x86_64)와 `arm64`(Jetson 등) 이미지를 동시에 빌드하여 DockerHub에 업로드할 수 있습니다.
+`docker pull` 시 호스트 아키텍처에 맞는 이미지가 자동으로 다운로드됩니다.
+
+### 1. 멀티 플랫폼 빌더 생성 (최초 1회)
+
+```bash
+# 멀티 플랫폼 지원 빌더 생성
+docker buildx create --name multiarch --driver docker-container --use
+
+# 빌더 부트스트랩 (QEMU 에뮬레이터 설정 포함)
+docker buildx inspect --bootstrap
+```
+
+### 2. 멀티 플랫폼 빌드 및 업로드
+
+```bash
+# ROS2 Jazzy TensorRT (amd64 + arm64)
+docker buildx build --platform linux/amd64,linux/arm64 \
+  --network=host --no-cache \
+  -t smkang0521/ros:jazzy_tensorrt \
+  -f Dockerfile_ros2_jazzy_tensorrt \
+  --push .
+```
+
+### 참고사항
+
+- `--push`: `docker-container` 드라이버는 로컬 저장을 지원하지 않으므로 레지스트리(DockerHub)로 직접 push해야 합니다
+- `--load`: 로컬에 이미지를 저장하려면 `--push` 대신 사용할 수 있지만, 단일 플랫폼만 지원됩니다
+- 타 아키텍처 빌드는 QEMU 에뮬레이션으로 진행되므로 네이티브 빌드보다 느릴 수 있습니다
 
 ---
 
@@ -100,6 +139,7 @@ docker push smkang0521/ros:foxy
 docker push smkang0521/ros:humble
 docker push smkang0521/ros:humble_spadi
 docker push smkang0521/ros:jazzy
+docker push smkang0521/ros:jazzy_tensorrt
 ```
 
 ---
@@ -140,11 +180,9 @@ docker push smkang0521/ros:jazzy
 SPADI 이미지를 빌드하기 전에 다음 파일들을 수정해야 합니다:
 
 1. **merge launch 파일**
-
    - `calibration_file_path` 변경: `"/root/soslab_files/calibration_params.json"`
 
 2. **카메라 launch 파일**
-
    - `json_path` 변경: `"/root/soslab_files/calibration_params.json"`
 
 3. **카메라 config 파일**
@@ -209,9 +247,3 @@ cm   # Compile and Make - 빌드 및 환경 설정
 ├── install/      # 설치 환경
 └── log/          # 로그 파일
 ```
-
-### 시스템 설정
-
-- **타임존**: Asia/Seoul (UTC+9)
-- **로케일**: en_US.UTF-8
-- **쉘**: Bash
