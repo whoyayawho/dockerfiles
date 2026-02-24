@@ -32,6 +32,7 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o 
     ros-humble-diagnostic-updater ros-humble-sensor-msgs ros-humble-std-msgs \
     ros-humble-geometry-msgs ros-humble-diagnostic-msgs \
     ros-humble-rmw-cyclonedds-cpp \
+    pulseaudio-utils \
     && pip3 install -U argcomplete \
     && rm -rf /var/lib/apt/lists/*
 

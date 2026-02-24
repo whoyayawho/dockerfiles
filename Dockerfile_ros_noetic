@@ -10,7 +10,7 @@ RUN apt update && apt install -y apt-utils gedit git locales lsb-release gnupg2 
 # Install ROS Noetic
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
 RUN curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
-RUN apt update && apt install -y ros-noetic-desktop-full python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+RUN apt update && apt install -y ros-noetic-desktop-full python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential pulseaudio-utils && rm -rf /var/lib/apt/lists/*
 
 RUN rosdep init
 RUN rosdep update
