@@ -1,0 +1,40 @@
+FROM ubuntu:20.04
+
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Seoul
+
+RUN apt update 
+RUN apt install -y software-properties-common
+RUN add-apt-repository universe
+RUN apt install -y apt-utils gedit locales lsb-release gnupg2 curl tmux vim zip iputils-ping net-tools
+
+# Install ROS2 foxy
+RUN locale-gen en_US en_US.UTF-8
+RUN update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
+ENV LANG=en_US.UTF-8 \
+    LC_ALL=en_US.UTF-8
+
+RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+RUN apt update && apt upgrade -y && apt install -y ros-foxy-desktop ros-dev-tools python3-pip ros-foxy-ros2bag ros-foxy-rosbag2-converter-default-plugins ros-foxy-rosbag2-storage-default-plugins pulseaudio-utils && rm -rf /var/lib/apt/lists/*
+RUN pip3 install -U argcomplete
+
+RUN mkdir -p /root/ros2_ws/src
+
+RUN printf '%s\n' \
+    "" \
+    "### ros2" \
+    "source /opt/ros/foxy/setup.bash" \
+    "source ~/ros2_ws/install/setup.bash" \
+    "" \
+    "alias cs='cd ~/ros2_ws/src'" \
+    "alias cw='cd ~/ros2_ws'" \
+    "alias cm='cd ~/ros2_ws && colcon build --symlink-install --cmake-args -DBUILD_SHARED_LIBS=ON && source ~/.bashrc'" \
+    "" \
+    >> /root/.bashrc
+
+
+CMD ["/bin/bash"]

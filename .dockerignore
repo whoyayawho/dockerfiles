@@ -1,0 +1,22 @@
+# Version control metadata
+.git/
+
+# Local credentials and environment files
+/id_rsa_docker_build
+/id_rsa_docker_build.pub
+/github_token.txt
+/.env
+/.env.*
+!/.env.example
+
+# Downloaded packages and archives
+*.deb
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Logs and OS-generated files
+*.log
+.DS_Store
+Thumbs.db

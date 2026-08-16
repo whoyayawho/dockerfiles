@@ -1,0 +1,4 @@
+# Keep cross-platform project text files on LF line endings.
+*.sh text eol=lf
+Dockerfile* text eol=lf
+*.md text eol=lf
