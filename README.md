@@ -102,6 +102,31 @@ ros:jazzy-arm64-test
 
 이 로컬 태그는 Docker Hub 태그가 아니며 최종 멀티 플랫폼 태그를 구성하는 용도로 게시되지 않습니다.
 
+### Buildx 캐시 삭제 및 처음부터 다시 빌드
+
+`docker_build.sh`는 기존 `ros-multiarch-builder`의 BuildKit 캐시를 재사용합니다. 기존 캐시를 모두 삭제하고 처음부터 다시 빌드해야 한다면 다음 명령을 실행합니다.
+
+```bash
+docker buildx prune \
+    --builder ros-multiarch-builder \
+    --all \
+    --force
+```
+
+이 명령은 `ros-multiarch-builder`에 저장된 빌드 캐시를 복구할 수 없게 삭제합니다. Docker Engine에 불러온 로컬 이미지와 실행 중인 컨테이너는 삭제하지 않지만, 이후 빌드는 기반 이미지 및 패키지를 다시 처리하므로 시간과 네트워크 사용량이 크게 늘어날 수 있습니다.
+
+캐시 삭제 후 로컬 빌드와 테스트만 수행하거나, 테스트 후 Docker Hub 게시까지 수행할 수 있습니다.
+
+```bash
+# 캐시 없이 로컬 빌드 및 smoke test 시작
+bash ./docker_build.sh
+
+# 캐시 없이 로컬 빌드 및 smoke test를 시작한 뒤 게시
+bash ./docker_build.sh --push
+```
+
+`--push` 실행 중 마지막 멀티 플랫폼 게시 빌드는 같은 실행에서 방금 생성한 캐시를 재사용합니다. 이는 검증이 끝난 동일 레이어를 다시 만들지 않기 위한 정상 동작입니다.
+
 ### 자동 smoke test
 
 | Dockerfile | 로컬 태그의 `<tag>` | 환경 설정 파일 | 검사 내용 |
