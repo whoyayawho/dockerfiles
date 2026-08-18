@@ -51,7 +51,7 @@ docker_args=(
     -it
 )
 
-# NVIDIA GPU와 Jetson을 자동 판별하고, Docker 런타임이 준비된 경우에만 GPU를 연결합니다.
+# NVIDIA GPU와 Jetson을 자동 판별해 적절한 Docker GPU 옵션을 추가합니다.
 docker_runtimes="$(docker info --format '{{json .Runtimes}}' 2>/dev/null || true)"
 nvidia_runtime_available=false
 if [[ "$docker_runtimes" == *'"nvidia"'* ]]; then
@@ -77,16 +77,22 @@ else
 
     if [[ -n "$nvidia_smi_command" ]] && "$nvidia_smi_command" -L >/dev/null 2>&1; then
         log "NVIDIA GPU를 감지했습니다."
+
+        # 최신 Docker는 NVIDIA CDI를 통해 기본 runc에서도 --gpus 요청을 처리할 수
+        # 있으므로, docker info에 'nvidia' 런타임이 없다는 이유만으로 GPU 연결을
+        # 건너뛰면 안 됩니다. 구형 설정에서 nvidia 런타임이 등록되어 있으면
+        # 명시적으로 사용하고, 그렇지 않아도 Docker에 GPU 장치를 요청합니다.
         if [[ "$nvidia_runtime_available" == true ]]; then
-            docker_args+=(
-                --runtime nvidia
-                --gpus all
-                --env NVIDIA_VISIBLE_DEVICES=all
-                --env NVIDIA_DRIVER_CAPABILITIES=all
-            )
+            docker_args+=(--runtime nvidia)
         else
-            warn "NVIDIA GPU는 감지했지만 NVIDIA Container Runtime이 없어 GPU 연결을 건너뜁니다."
+            log "NVIDIA CDI/기본 런타임을 통해 GPU 연결을 요청합니다."
         fi
+
+        docker_args+=(
+            --gpus all
+            --env NVIDIA_VISIBLE_DEVICES=all
+            --env NVIDIA_DRIVER_CAPABILITIES=all
+        )
     else
         log "NVIDIA GPU를 찾지 못해 GPU 옵션 없이 실행합니다."
     fi
